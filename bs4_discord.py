@@ -6,13 +6,10 @@ from collections import defaultdict
 import pandas as pd
 from tqdm import tqdm
 
-fname = glob.glob("*")[-1]
-
 all_files = glob.glob(unquote("/home/bt/dev/Med%C5%BAuslovjanska%20bes%C4%9Bda.%20Arhiv%20od%2023-08/*.html"))
+all_files = glob.glob("C:\dev\Medźuslovjanska besěda. Arhiv od 23-08\*.html")
 
 koristniki = defaultdict(dict)
-
-# fname = unquote("/home/bt/dev/Med%C5%BAuslovjanska%20bes%C4%9Bda.%20Arhiv%20od%2023-08/Med%C5%BEuslovjanska%20bes%C4%9Bda%20-%20MED%C5%BDUSLOVJANSKY%20JEZYK%20-%20pouky-lessons%20[830456577827405875].html")
 
 i = 0
 for fname in all_files:
@@ -21,7 +18,7 @@ for fname in all_files:
     #    print("SKIP")
     #    continue
     i += 1
-    with open(fname, 'r') as f:
+    with open(fname, 'r', encoding="utf8") as f:
         efg = f.read()
 
     soup = BeautifulSoup(efg)
