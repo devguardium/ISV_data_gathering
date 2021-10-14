@@ -7,11 +7,9 @@ from tqdm import tqdm
 
 
 import pymorphy2
-import sys
-sys.path.append("../ISV_NLP_utils/")
 # from normalizacija import fix_esperanto, fix_silmeth, fix_polish, fix_diacritics, fix_russian, fix_soft_etm_russian, convert2MSPlus
-from normalizacija import normalize_and_simple_spellcheck, transliterate_cyr2lat, fix_text, abecedas
-from example2 import perform_spellcheck, print_spellcheck
+from isv_nlp_utils.normalizacija import normalize_and_simple_spellcheck, transliterate_cyr2lat, fix_text, abecedas
+# from example2 import perform_spellcheck, print_spellcheck
 from constants import DISCORD_USERNAME_REGEX
 
 from langid.langid import LanguageIdentifier, model
