@@ -7,19 +7,11 @@ from isv_nlp_utils import constants
 import ujson
 from translation_aux import inflect_carefully, UDFeats2OpenCorpora, infer_pos, iskati2
 
+import conllu
+import requests
+import os
+import argparse
 
-
-from razdel import sentenize, tokenize
-from slovnet import Morph
-from slovnet import Syntax
-from navec import Navec
-
-navec = Navec.load('navec_news_v1_1B_250K_300d_100q.tar')
-morph = Morph.load('slovnet_morph_news_v1.tar', batch_size=4)
-syntax = Syntax.load('slovnet_syntax_news_v1.tar')
-
-syntax.navec(navec)
-morph.navec(navec)
 
 def download_slovnik():
     dfs = pd.read_excel(
@@ -32,12 +24,10 @@ def download_slovnik():
     dfs['words'].to_pickle("slovnik.pkl")
     return dfs
 
-dfs = {"words": pd.read_pickle("slovnik.pkl")}
-
-import conllu
-import requests
-
 etm_morph = constants.create_analyzers_for_every_alphabet()['etm']
+
+
+
 
 
 def udpipe2df(data):
@@ -66,7 +56,20 @@ def slovnet2df(markup):
     return res
 
 def prepare_parsing(text, model_name):
-    if model_name == "slovnet":
+    if model_name == "ru_slovnet":
+
+        from razdel import sentenize, tokenize
+        from slovnet import Morph
+        # from slovnet import Syntax
+        from navec import Navec
+
+        navec = Navec.load('navec_news_v1_1B_250K_300d_100q.tar')
+        morph = Morph.load('slovnet_morph_news_v1.tar', batch_size=4)
+        # syntax = Syntax.load('slovnet_syntax_news_v1.tar')
+
+        # syntax.navec(navec)
+        morph.navec(navec)
+
         chunk = []
         for sent in sentenize(text):
             tokens = [_.text for _ in tokenize(sent.text)]
@@ -105,7 +108,7 @@ def prepare_parsing(text, model_name):
         return udpipe2df(data)
 
 
-def translate_sentence(sent, src_lang):
+def translate_sentence(sent, src_lang, dfs):
     result = []
     for idx, token_row_data in sent.iterrows():
         subresult = []
@@ -161,17 +164,37 @@ def translation_candidates_as_html(translation_array):
     return html_result
 
 if __name__ == "__main__":
-    text = "Ранее Ломоносов слушал лекции Вольфа, которые он читал не на латыни, как было принято в те времена, а на немецком языке. Это подтолкнуло Ломоносова к выводу: и в России преподавание надо вести на родном языке. "
-    parsed = prepare_parsing(text, "russian")
-    translated = translate_sentence(parsed, "ru")
-    print(translated)
-    html = translation_candidates_as_html(translated)
-    with open("test1.html", "w", encoding="utf8") as f:
-        f.write(html)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('lang', choices=[
+       'en',
+       'ru', 'be', 'uk', 'pl', 'cs', 'sk', 'bg',
+       'mk', 'sr', 'hr', 'sl', 'cu', 'de', 'nl', 'eo',
+       'ru_slovnet'
+    ])
+    parser.add_argument(
+       '--text', type=str, default="Этот текст стоит тут для примера.",
+       help='The text that should be translated'
+    )
 
-    parsed = prepare_parsing(text, "slovnet")
-    translated = translate_sentence(parsed, "ru")
-    print(translated)
+    parser.add_argument('--outfile', '-o', nargs='?',
+        type=argparse.FileType('w', encoding="utf8"),
+        # default=sys.stdout,
+        default="test.html",
+        help='The output file'
+    )
+
+    args = parser.parse_args()
+
+    if os.path.isfile("slovnik.pkl"):
+        print("Found 'slovnik.pkl' file, using it")
+        dfs = {"words": pd.read_pickle("slovnik.pkl")}
+    else:
+        print("Downloading dictionary data from Google Sheets...")
+        dfs = download_slovnik()
+        dfs['words'].to_pickle("slovnik.pkl")
+        print("Download is completed succesfully.")
+    parsed = prepare_parsing(args.text, args.lang)
+    translated = translate_sentence(parsed, args.lang, dfs)
     html = translation_candidates_as_html(translated)
-    with open("test2.html", "w", encoding="utf8") as f:
-        f.write(html)
+
+    args.outfile.write(html)

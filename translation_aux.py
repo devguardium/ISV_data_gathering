@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 def UDFeats2OpenCorpora(feats):
     result = []
     for key, value in feats.items():
@@ -57,10 +59,13 @@ def infer_pos(details_string):
     if 'v' in arr:
         return 'verb'
 
+ryba = lambda x: x
 
-transliteration = {
-    "ru": lambda x: x.replace("ё", "е")
-}
+transliteration = defaultdict(lambda: ryba)
+transliteration['ru'] = lambda x: x.replace("ё", "е")
+transliteration['uk'] = lambda x: x.replace('ґ', 'г')
+transliteration['be'] = lambda x: x.replace('ґ', 'г')
+
 
 
 def iskati2(jezyk, slovo, sheet, pos=None):
@@ -69,6 +74,7 @@ def iskati2(jezyk, slovo, sheet, pos=None):
     najdene_slova = []
     # could be done on loading
     sheet['isv'] = sheet['isv'].str.replace("!", "").str.replace("#", "").str.lower()
+    slovo = transliteration[jezyk](slovo)
     sheet[jezyk] = sheet[jezyk].apply(transliteration[jezyk])
 
     # lang-specific logic

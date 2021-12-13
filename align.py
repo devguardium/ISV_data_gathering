@@ -36,6 +36,29 @@ Najvyše Razumlivy Standard jest hipotetičny variant medžuslovjanskogo jezyka 
 Preporučenja do Najvyše Razumlivogo Standarda sut v drugom kanalu (#deleted-channel) kaky jest dostupny za ljudi so rolju govoreči.
 Ljudam so rolju učeči ne jest potrěbno měšati vo glavě, itak prosto prěporučajemo učiti se medžuslovjansky so osnovnyh iztokov, kake sut napisane vo prvoj poukě.
 Dobra metoda učenja medžuslovjanskogo jezyka jest komunikacija so vyše izkušenymi govoriteljami, itak prizyvajemo vsih do učestvovanja vo besědah na glasovyh kanalah.
+Medžuslovjansky jest jezyk kaky koristaje cělu bogatost slovjanskyh jezykov, daby dostaviti koristniku najvysšu možnu razumlivost. Jest to veliky pljus medžuslovjanskogo: samo tuto dělaje jezyk vyše prirodnym za vsakogo Slovjanina. Ale samo tuto takože iztvarjaje maly problem za ljudij kaki počeli koristati medžuslovjansky, zatože učeči medžuslovjanskogo mogut imati težky čas kogda dělo ide do izbora slov. Kako izbrati slovo kako bude razumlivo za najveliku možnu kolikost Slovjanov?
+Najprvo, mnogo koristno bude prěgleděti naš fraznik (tutčas ješče pri njem rabotajemo)
+Ako li fraznik ne byl mnogo pomočny v tutom slučaju, s velikoju věrojetnostju bude pomogti interaktivny slovnik medžuslovjanskogo za adresom https://interslavic-dictionary.com/
+Daby najdti potrěbno slovo tam, jedino imajete njego dodati do iskalnogo reda. Možno, že slovnik bude dati dost veliku kolikost variantov za jedino slovo. Situacija izgledaje težko, ale slovnik ima mnogo dobru funkciju: vsako slovo iz rezultata iskanja bude imati klavišu kaka dozvoljaje prěgledati prěklady tutogo slova na druge slovjanske jezyky i izbrati najlěpši variant.
+Poněkogda imamo problem, kogda sut několiko ravnyh variantov. Aby rěšiti tutoj problem, možno izkoristati dost banalnu věč: iskalnik diskorda na serveru.
+Napriměr, hčemo najdti slovo za «thank you». Ako li prověriti slovo «dekuju», imamo jedino 56 rezultatov v iskalniku, ale ako li budemo gledeti na serveru slovo «hvala», možno primětiti, že imamo za njego 737 rezultatov. Dakle, vyše dobry variant može byti «hvala».
+Ale, poněkogda sųt situacije kogda ne imamo někakoj leksiky v slovniku. Čto potrěbno dělati v tutom slučaju? Někaki Karuni za te slučaje koristajut znanu onlajn-enciklopedijų — wikipedia.org
+Jedino potrěbno najdti v vikipedije članok. «Wikipedia» ima možnost glednuti verzije članka na drugyh jezykah i časom to mnogo pomogaje v izboru slov.
+Prěgledali jeste vsě možlive varianty i vse ješče ničto ne razuměte i ne znajete kako slovo potrěbno koristati? Dobrodošli do #slověňský-словєньскъí! Može byti, v rěšenju tutogo pytanja vam budut pomogti drugi koristniki tutogo servera.
+Jestvuje ješče opcija daby izkoristati sajt Wikidata. Napriměr:
+    Hču prěklasti "cerebellum" na MS
+    1) idu do Vikipediji: napr., na https://en.wikipedia.org/wiki/Cerebellum
+    2) klikaju na "Wikidata item" (Element Vikidanyh)
+    3) odvorjaju link: https://www.wikidata.org/wiki/130983
+    4) gledaju na dol stranicy
+    5) čitaju spis, išču slovjanske jezyky (to je zaisto najvyše komplikovana čest, zatože toj spis ima mnogo jezykov):
+Daby pisati na medžuslovjanskom možno koristati mnogo različnyh klavjatur. Tuta pouka jest jih list.
+Narodne klavjatury za latinsky alfabet:
+Narodne klavjatury za kiriličsky alfabet:
+Jestvujut takože specijalne klavjatury za kompjuterne sistemy:
+razširjena MS latinica na medžunarodnyh latiničnyh klaviaturah (kako napriměr hrvatska v variantu unicodeus). Polna kiriličska klavjatura jest na standardnoj ukrainskoj klavjaturě.
+V tom poslanju od Roberta jest mnogo informaciji itak tuta pouka jest jedino jego skračenje:
+(pytanje 3 v tom poslanju)
 """.split('\n')
 EN_text = """Here is grammar course of Interslavic Language.
 We recommend always using this Interslavic dictionary for learning words and grammar.
@@ -64,6 +87,27 @@ The Most Understandable Standard is a hypothetical variant of the Interslavic la
 Recommendations for the Most Understandable Standard are in another channel (#deleted-channel), which is available to people with the govoreči role.
 There is no need to confuse people with the učeči, so we simply recommend learning Interslavic from basic sources, which are written in the first lesson.
 A good method for learning the Interslavic languages is communication with more experienced speakers, so we invite you to participate in conversations in voice channels. 
+Interslavic is a language which uses the richness of the Slavic languages to give the user the biggest possible understandability. It’s a big plus of Interslavic: just this makes the language more natural for every Slav. But this also creates a small problem for people who began using Interslavic, because Interslavic learners may have a hard time when it comes to choosing words. How does one choose a word that will be most understandable to the biggest possible number of Slavs?
+First, many users will check our phrasebook (we’re still working on it)
+If the phrasebook wasn’t very useful in this case, the interactive Interslavic dictionary with the adress https://interslavic-dictionary.com/ will surely help.
+To find a word there, you simply have to add it to the searchbar. It is possible that the dictionary will give a lot of variants for a single word. The situation is looking bad, but the dictionary has a good function: each word from the results of the search will have a button which allows you to look up the translations of this word to other Slavic languages and choose the best option. 
+Sometimes we have a problem when there are a few equal options. To solve this problem, you can use a pretty simple thing: the discord searchbar on this server.
+For example, we want to find a word for "thank you". If we serch the word »dekuju«, we will only get 56 results, but if we will check the word »hvala«, we can see that we have 737 results for it. And so, the better variant can be »hvala«.
+But sometimes there are situations when we don’t have a bit of lexicon in the dictionary. What does one do in such a situation? Some Karuni (Admins basically) use a known online encyclopedia — wikipedia.org.
+All you need to do is find a Wikipedia article. Wikipedia has an option to check versions of the article in other languages and sometimes it helps in choosing words.
+You have checked all possible variants, and still don’t understand anything and don’t know how to use a word? Welcome to #slověňský-словєньскъí! Other users can help you in answering this question.
+You have also option to use the Wikidata. For instance:
+    I'd like to translate "cerebellum" to Interslavic.
+    1) I go to Wikipedia: e.g. to https://en.wikipedia.org/wiki/Cerebellum
+    2) I click on "Wikidata item"
+    3) I open a link: https://www.wikidata.org/wiki/130983
+    4) I go to the bottom of the site
+    5) I read the list, search for slavic languages (that's the most complicated part, cause the list has a lot of languages):
+To write in Interslavic, you can use many different keyboard layouts. This lesson is a list of them.
+There are also special layouts for computer systems:
+    extended Interslavic latin on international latin layouts (for example Croatian in the unicodeus variant). The full cyrrylic keyboard is in the standard Ukrainian one.
+There is a lot of information in this message made by Roberto , and so this lesson is simply a shorter version of it.
+    (in Interslavic, question 3 in the message)
 """.split("\n")
 
 vectors1, vectors2 = [], []
