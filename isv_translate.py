@@ -24,10 +24,6 @@ def download_slovnik():
     dfs['words'].to_pickle("slovnik.pkl")
     return dfs
 
-etm_morph = constants.create_analyzers_for_every_alphabet()['etm']
-
-
-
 
 
 def udpipe2df(data):
@@ -78,6 +74,9 @@ def prepare_parsing(text, model_name):
         df = slovnet2df(markup)
         # then add lemmas
         # I use udpipe only for lemmas
+        # TODO: use
+        #     from natasha.norm import normalize
+        # instead
         backup_model_name = "russian"
         r = requests.post(
             url="http://lindat.mff.cuni.cz/services/udpipe/api/process",
@@ -108,7 +107,7 @@ def prepare_parsing(text, model_name):
         return udpipe2df(data)
 
 
-def translate_sentence(sent, src_lang, dfs):
+def translate_sentence(sent, src_lang, dfs, etm_morph):
     result = []
     for idx, token_row_data in sent.iterrows():
         subresult = []
@@ -176,6 +175,11 @@ if __name__ == "__main__":
        help='The text that should be translated'
     )
 
+    parser.add_argument(
+        '-p', '--path', help="path to DAWG dictionary files (a format that pymorphy2 uses)",
+        default="."
+    )
+
     parser.add_argument('--outfile', '-o', nargs='?',
         type=argparse.FileType('w', encoding="utf8"),
         # default=sys.stdout,
@@ -194,7 +198,11 @@ if __name__ == "__main__":
         dfs['words'].to_pickle("slovnik.pkl")
         print("Download is completed succesfully.")
     parsed = prepare_parsing(args.text, args.lang)
-    translated = translate_sentence(parsed, args.lang, dfs)
+    lang = args.lang
+    if args.lang == "ru_slovnet":
+        lang = "ru"
+    etm_morph = constants.create_analyzers_for_every_alphabet(args.path)['etm']
+    translated = translate_sentence(parsed, lang, dfs, etm_morph)
     html = translation_candidates_as_html(translated)
 
     args.outfile.write(html)

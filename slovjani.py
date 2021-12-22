@@ -12,6 +12,10 @@ fmodel = fasttext.load_model(path_to_pretrained_model)
 fmodel.predict([text2])  # ([['__label__en']], [array([0.9331119], dtype=float32)]
 """
 
+
+# TODO: just crawl https://slovjani.info/indexes/index.html
+
+
 class Czlanok:
     def __init__(self):
         self.title_ISV = ""
