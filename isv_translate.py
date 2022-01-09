@@ -37,15 +37,21 @@ def udpipe2df(data):
         result.append(df)
     return pd.concat(result).rename(columns={"upos": "pos"}).drop(columns=["xpos", "deps"])
 
-def slovnet2df(markup):
+def slovnet2df(markup, vocab):
+    from natasha.norm import inflect_words, recover_shapes
+    def normalize(vocab, tokens):
+        words = inflect_words(vocab, tokens)
+        words = recover_shapes(words, tokens)
+        return words
+
     result = []
     for i, natasha_sent in enumerate(markup):
         df = pd.DataFrame(natasha_sent.tokens)
         df.columns = ["form", "pos", "feats"]
         df['sent'] = i
+        df['lemma'] = list(normalize(vocab, natasha_sent.tokens))
         result.append(df)
     res = pd.concat(result)
-    res['lemma'] = float("nan")
     res['head'] = float("nan")
     res['deprel'] = float("nan")
     res['misc'] = float("nan")
@@ -58,6 +64,7 @@ def prepare_parsing(text, model_name):
         from slovnet import Morph
         # from slovnet import Syntax
         from navec import Navec
+        from natasha import MorphVocab
 
         navec = Navec.load('navec_news_v1_1B_250K_300d_100q.tar')
         morph = Morph.load('slovnet_morph_news_v1.tar', batch_size=4)
@@ -71,26 +78,8 @@ def prepare_parsing(text, model_name):
             tokens = [_.text for _ in tokenize(sent.text)]
             chunk.append(tokens)
         markup = morph.map(chunk)
-        df = slovnet2df(markup)
-        # then add lemmas
-        # I use udpipe only for lemmas
-        # TODO: use
-        #     from natasha.norm import normalize
-        # instead
-        backup_model_name = "russian"
-        r = requests.post(
-            url="http://lindat.mff.cuni.cz/services/udpipe/api/process",
-            data={
-                "data": " ".join(df.form),
-                "tagger": "",
-                "tokenizer": "",
-                "model": backup_model_name
-            }
-        )
-        data = ujson.loads(r.text)['result']
-        udpipe_df = udpipe2df(data)
-        assert len(udpipe_df) == len(df)
-        df['lemma'] = udpipe_df.lemma.values
+        df = slovnet2df(markup, MorphVocab())
+        print(df)
         return df
     else:
         r = requests.post(
@@ -107,17 +96,46 @@ def prepare_parsing(text, model_name):
         return udpipe2df(data)
 
 
+def reverse_flavorize(word, pos, feats, src_lang):
+    pass
+    return word
+
+
+def special_case(token_row_data, src_lang):
+    if token_row_data.pos == "PROPN":
+        return reverse_flavorize(token_row_data.form, token_row_data.pos, token_row_data.feats, src_lang)
+    if token_row_data.pos == "PUNCT":
+        return token_row_data.form
+
+    if token_row_data.pos == "VERB" and token_row_data.form == "нет":
+        return "ne jest"  # TODO: ne sut?
+    if token_row_data.lemma == "это":
+        return "tuto"
+    '''
+    if token_row_data.lemma == "что" and token_row_data.pos == "SCONJ":
+        return "že"
+    if token_row_data.lemma == "что" and token_row_data.pos == "PRON":
+        return "čto"
+    '''
+    return None
+
+
+import re
+REFL_REMOVER = re.compile(" sę$")
+
 def translate_sentence(sent, src_lang, dfs, etm_morph):
     result = []
     for idx, token_row_data in sent.iterrows():
         subresult = []
-        if token_row_data.pos in {"PROPN", "PUNCT"}:
-            subresult.append(token_row_data.form)
+        special_translation = special_case(token_row_data, src_lang)
+        if special_translation is not None:
+            subresult.append(special_translation)
             result.append(subresult)
             continue
+
         lemma = token_row_data['lemma']
 
-        found = iskati2(src_lang, lemma, dfs['words'])
+        found = iskati2(src_lang, lemma, dfs['words'], pos=token_row_data['pos'])
         rows_found = dfs['words'].loc[found, :].sort_values(by='type')
         if not found:
             subresult.append("[?" + token_row_data.form + "?]")
@@ -125,12 +143,17 @@ def translate_sentence(sent, src_lang, dfs, etm_morph):
         else:
             translation_cands = rows_found.isv.values
 
-        for isv_lemma in translation_cands:
-            # TODO: select one; split multi-entries
+        translation_cands = sum(
+            [lemma_entry.split(",") for lemma_entry in translation_cands],
+            []
+        )
+        translation_cands = [
+            # remove "sę" and trailing space left after splitting
+            REFL_REMOVER.sub("", lemma_with_trailing_space.strip())
+            for lemma_with_trailing_space in translation_cands
+        ]
 
-            # print(token['deprel'], token['upos'])
-            # print(token, lemma, token['upos'], token['deprel'])
-            # print(dfs['words'].loc[found, ['isv', 'partOfSpeech', 'type']])
+        for isv_lemma in translation_cands:
 
             if token_row_data.feats:
                 inflect_data = UDFeats2OpenCorpora(token_row_data.feats)
@@ -141,9 +164,17 @@ def translate_sentence(sent, src_lang, dfs, etm_morph):
                 subresult += ([x.word for x in inflected])
             else:
                 subresult.append(isv_lemma)
+
+        # remove duplicates
+        subresult = list(set(subresult))
         result.append(subresult)
     # print(["/".join(x).replace(", ", "/") for x in result])
     return result
+
+def convert_df_to_html(df):
+    return df.style\
+                   .set_table_attributes("style='display:inline'")\
+                   ._repr_html_()
 
 def translation_candidates_as_html(translation_array):
     html_result = ""
@@ -170,6 +201,12 @@ if __name__ == "__main__":
        'mk', 'sr', 'hr', 'sl', 'cu', 'de', 'nl', 'eo',
        'ru_slovnet'
     ])
+        # Вообще, между естественными языками и межславянским нет чёткой грани. Можно бы было построить учебник, который бы показывал, как поступательно сделать межславянский из родного языка. И каждый бы мог остановиться где хочет.
+
+        # Вообще, между природными языками и межславянским не есть ясной границы. Можно бы было написать учебник, который бы показывал, как поступательно сделать межславянский из родного языка. И всякий бы мог остановиться где он хочет.
+
+        # Вообче, меджу природными језыками и меджусловјанскым не јест јасной граници. Можно бы было написати учебник, кторы бы показывал, како поступно сдєлати меджусловјанскы из родного језыка. И всякы бы могл обстановити се там, кде он хче. 
+
     parser.add_argument(
        '--text', type=str, default="Этот текст стоит тут для примера.",
        help='The text that should be translated'
@@ -203,6 +240,6 @@ if __name__ == "__main__":
         lang = "ru"
     etm_morph = constants.create_analyzers_for_every_alphabet(args.path)['etm']
     translated = translate_sentence(parsed, lang, dfs, etm_morph)
-    html = translation_candidates_as_html(translated)
+    html = convert_df_to_html(parsed) + translation_candidates_as_html(translated)
 
     args.outfile.write(html)

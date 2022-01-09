@@ -1,5 +1,18 @@
 from collections import defaultdict
 
+def UDPos2OpenCorpora(pos):
+    if pos == "aux":
+        return ["verb"]
+    if pos == "adp":
+        return ["prep"]
+    if pos == "cconj":
+        return ["conj"]
+    if pos == "sconj":
+        return ["conj"]
+    if pos == "part":
+        return ["part", "interjection", "conj"]
+    return [pos]
+
 def UDFeats2OpenCorpora(feats):
     result = []
     for key, value in feats.items():
@@ -27,8 +40,31 @@ def UDFeats2OpenCorpora(feats):
             result.append(value.lower())
         if key == 'Person':
             result.append(value.lower() + 'per')
-        # {'Aspect': 'Imp', 'Mood': 'Ind', 'Tense': 'Past', 'VerbForm': 'Fin', 'Voice': 'Act'}
-    return set(result)
+        if key == 'Aspect':
+            if value.lower() == "imp": 
+                value = "impf"
+            result.append(value.lower())
+        if key == 'Degree':
+            if value.lower() == "pos": 
+                value = ""
+            if value.lower() == "cmp": 
+                value = "comp"
+            if value.lower() == "sup": 
+                value = "supr"
+            result.append(value.lower())
+        if key == 'VerbForm':
+            if value.lower() == "fin": 
+                result += ["~actv", "~pssv"]
+            pass  # https://universaldependencies.org/ru/feat/VerbForm.html
+        if key == 'Voice':
+            if value.lower() == "act": 
+                result.append("actv")
+            if value.lower() == "pass": 
+                result.append("pssv")
+        # {'Mood': 'Ind', 'Tense': 'Past', 'VerbForm': 'Fin'}
+    if len(result) < len(feats):
+        print(f"Info loss? {feats} -> {result}")
+    return set([x for x in result if x])
 
 
 def infer_pos(details_string):
@@ -70,7 +106,7 @@ transliteration['be'] = lambda x: x.replace('ґ', 'г')
 
 def iskati2(jezyk, slovo, sheet, pos=None):
     if pos is not None:
-        pos = pos.lower()
+        pos = UDPos2OpenCorpora(pos.lower())
     najdene_slova = []
     # could be done on loading
     sheet['isv'] = sheet['isv'].str.replace("!", "").str.replace("#", "").str.lower()
@@ -84,7 +120,7 @@ def iskati2(jezyk, slovo, sheet, pos=None):
 
         if slovo in stroka[jezyk].split(", "):
             if pos is not None:
-                if pos == stroka["pos"]:
+                if stroka["pos"] in pos:
                     najdene_slova.append(i)
                 else:
                     print("~~~~", stroka['isv'], pos, ' != ', stroka['pos'])
@@ -96,25 +132,28 @@ def iskati2(jezyk, slovo, sheet, pos=None):
 
 
 def inflect_carefully(morph, isv_lemma, inflect_data):
+    print(isv_lemma, inflect_data)
     parsed = morph.parse(isv_lemma)[0]
-    # inflected = parsed.inflect(inflect_data)
-    # if inflected:
-    #     return inflected
-    if not inflect_data:
-        print("inflect_data is empty!")
-        print(morph, isv_lemma, inflect_data)
     lexeme = parsed.lexeme
-    candidates = {form[1]: form.tag.grammemes & inflect_data for form in lexeme}
+
+    forbidden_tags = {tag[1:] for tag in inflect_data if tag[0] == "~"}
+    inflect_data = {tag for tag in inflect_data if tag[0] != "~"}
+
+    candidates = {
+            form[1]: form.tag.grammemes & inflect_data for form in lexeme
+            if not(form.tag.grammemes & forbidden_tags)
+    }
     # rank each form according to the size of intersection
     best_fit = sorted(candidates.items(), key=lambda x: len(x[1]))[-1]
     best_candidates = {k: v for k, v in candidates.items() if len(v) == len(best_fit[1])}
-    if len(best_fit[1]) == 0:
+    if len(best_fit[1]) == 0 and len(inflect_data) > 0:
         print("have trouble in finding anything like ", inflect_data, " for ", isv_lemma)
         return []
     if len(best_fit[1]) != len(inflect_data):
         print("have trouble in finding ", inflect_data, " for ", isv_lemma)
         print("best_fit: ", best_fit)
         print("candidates: ", {k: v for k, v in candidates.items() if len(v) == len(best_fit[1])})
+        print([parsed.inflect(cand.grammemes) for cand in best_candidates])
     return [parsed.inflect(cand.grammemes) for cand in best_candidates]
 
 
