@@ -3,14 +3,18 @@ from collections import defaultdict
 def UDPos2OpenCorpora(pos):
     if pos == "aux":
         return ["verb"]
+    if pos == "det":
+        return ["pron"]
     if pos == "adp":
         return ["prep"]
     if pos == "cconj":
         return ["conj"]
     if pos == "sconj":
-        return ["conj"]
+        return ["conj", "adv"]
     if pos == "part":
         return ["part", "interjection", "conj"]
+    if pos == "propn":
+        return ["noun"]
     return [pos]
 
 def UDFeats2OpenCorpora(feats):
@@ -55,9 +59,11 @@ def UDFeats2OpenCorpora(feats):
         if key == 'VerbForm':
             if value.lower() == "fin": 
                 result += ["~actv", "~pssv"]
+            if value.lower() == "inf": 
+                result += ["infn"]
             pass  # https://universaldependencies.org/ru/feat/VerbForm.html
         if key == 'Voice':
-            if value.lower() == "act": 
+            if value.lower() == "act" and feats["VerbForm"] == "Part": 
                 result.append("actv")
             if value.lower() == "pass": 
                 result.append("pssv")

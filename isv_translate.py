@@ -102,13 +102,15 @@ def reverse_flavorize(word, pos, feats, src_lang):
 
 
 def special_case(token_row_data, src_lang):
-    if token_row_data.pos == "PROPN":
-        return reverse_flavorize(token_row_data.form, token_row_data.pos, token_row_data.feats, src_lang)
+    # if token_row_data.pos == "PROPN":
+    #     return reverse_flavorize(token_row_data.form, token_row_data.pos, token_row_data.feats, src_lang)
     if token_row_data.pos == "PUNCT":
         return token_row_data.form
 
     if token_row_data.pos == "VERB" and token_row_data.form == "нет":
         return "ne jest"  # TODO: ne sut?
+    if token_row_data.lemma == "не":
+        return "ne"
     if token_row_data.lemma == "это":
         return "tuto"
     '''
@@ -125,12 +127,16 @@ REFL_REMOVER = re.compile(" sę$")
 
 def translate_sentence(sent, src_lang, dfs, etm_morph):
     result = []
+    inflect_data_array = []
+    isv_lemmas_array = []
     for idx, token_row_data in sent.iterrows():
         subresult = []
         special_translation = special_case(token_row_data, src_lang)
         if special_translation is not None:
             subresult.append(special_translation)
             result.append(subresult)
+            inflect_data_array.append([])
+            isv_lemmas_array.append([])
             continue
 
         lemma = token_row_data['lemma']
@@ -138,8 +144,12 @@ def translate_sentence(sent, src_lang, dfs, etm_morph):
         found = iskati2(src_lang, lemma, dfs['words'], pos=token_row_data['pos'])
         rows_found = dfs['words'].loc[found, :].sort_values(by='type')
         if not found:
-            subresult.append("[?" + token_row_data.form + "?]")
+            shallow_translated = reverse_flavorize(token_row_data.form, token_row_data.pos, token_row_data.feats, src_lang)
+            subresult.append("[?" + shallow_translated + "?]")
             translation_cands = []
+            # TODO: or try to work with lemma instead?
+            # shallow_translated = reverse_flavorize(token_row_data.lemma, token_row_data.pos, token_row_data.feats, src_lang)
+            # translation_cands = [shallow_translated]
         else:
             translation_cands = rows_found.isv.values
 
@@ -153,15 +163,18 @@ def translate_sentence(sent, src_lang, dfs, etm_morph):
             for lemma_with_trailing_space in translation_cands
         ]
 
+        inflect_data = UDFeats2OpenCorpora(token_row_data.feats or dict())
+        inflect_data_array.append(inflect_data)
+        isv_lemmas_array.append(translation_cands)
         for isv_lemma in translation_cands:
-
             if token_row_data.feats:
-                inflect_data = UDFeats2OpenCorpora(token_row_data.feats)
-                inflected = inflect_carefully(etm_morph, isv_lemma, inflect_data)
-                if not inflected:
-                    subresult.append("[?" + isv_lemma + "?]")
-                # print("####", [(x.word, x.tag) for x in inflected])
-                subresult += ([x.word for x in inflected])
+                if token_row_data.pos not in {"ADV", "ADP", "PART"}:
+                    inflected = inflect_carefully(etm_morph, isv_lemma, inflect_data)
+                    inflected = [x.word for x in inflected]
+                else:
+                    inflected = [isv_lemma]
+
+                subresult += (inflected or ["[?" + isv_lemma + "?]"])
             else:
                 subresult.append(isv_lemma)
 
@@ -169,12 +182,12 @@ def translate_sentence(sent, src_lang, dfs, etm_morph):
         subresult = list(set(subresult))
         result.append(subresult)
     # print(["/".join(x).replace(", ", "/") for x in result])
-    return result
+    details_df = sent.copy()
+    details_df["opencorpora_tags"] = inflect_data_array
+    details_df["isv_lemmas"] = isv_lemmas_array
+    details_df["translation_candidates"] = result
+    return result, details_df
 
-def convert_df_to_html(df):
-    return df.style\
-                   .set_table_attributes("style='display:inline'")\
-                   ._repr_html_()
 
 def translation_candidates_as_html(translation_array):
     html_result = ""
@@ -239,7 +252,7 @@ if __name__ == "__main__":
     if args.lang == "ru_slovnet":
         lang = "ru"
     etm_morph = constants.create_analyzers_for_every_alphabet(args.path)['etm']
-    translated = translate_sentence(parsed, lang, dfs, etm_morph)
-    html = convert_df_to_html(parsed) + translation_candidates_as_html(translated)
+    translated, debug_details = translate_sentence(parsed, lang, dfs, etm_morph)
+    html = debug_details.to_html() + translation_candidates_as_html(translated)
 
     args.outfile.write(html)
