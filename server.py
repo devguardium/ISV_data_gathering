@@ -1,5 +1,6 @@
 import argparse
 from flask import Flask, render_template, request, jsonify, abort
+from flask_cors import CORS, cross_origin
 import pymorphy2
 from isv_nlp_utils.constants import create_analyzers_for_every_alphabet
 from isv_nlp_utils.spellcheck import perform_spellcheck
@@ -9,11 +10,12 @@ from translation_aux import LANGS
 from isv_translate import translate_sentence, translation_candidates_as_html, get_slovnik, prepare_parsing
 
 
-
 def create_app(etm_morph, slovnik):
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__)
+    cors = CORS(app)
     app.config["JSON_AS_ASCII"] = False
+    app.config['CORS_HEADERS'] = 'Content-Type'
 
     @app.route('/<lang>/<text>', methods=['GET'])
     def as_html(lang, text):
