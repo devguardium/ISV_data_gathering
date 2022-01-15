@@ -1,10 +1,16 @@
 from collections import defaultdict
 
+LANGS = {
+       'en',
+       'ru', 'be', 'uk', 'pl', 'cs', 'sk', 'bg',
+       'mk', 'sr', 'hr', 'sl', 'cu', 'de', 'nl', 'eo',
+}
+
 def UDPos2OpenCorpora(pos):
     if pos == "aux":
-        return ["verb"]
+        return ["verb", "part"]
     if pos == "det":
-        return ["pron"]
+        return ["pron", "adj"]
     if pos == "adp":
         return ["prep"]
     if pos == "cconj":
@@ -12,7 +18,7 @@ def UDPos2OpenCorpora(pos):
     if pos == "sconj":
         return ["conj", "adv"]
     if pos == "part":
-        return ["part", "interjection", "conj"]
+        return ["part", "interjection", "conj", "adv"]
     if pos == "propn":
         return ["noun"]
     return [pos]
@@ -109,29 +115,35 @@ transliteration['uk'] = lambda x: x.replace('ґ', 'г')
 transliteration['be'] = lambda x: x.replace('ґ', 'г')
 
 
+def prepare_slovnik(slovnik):
+    for lang in LANGS:
+         assert slovnik[slovnik[lang].astype(str).apply(lambda x: "((" in sorted(x))].empty
+    import re
+    brackets_regex = re.compile(" \(.*\)")
+    for lang in LANGS:
+        slovnik[lang].str.replace(brackets_regex, "")
+        slovnik[lang] = slovnik[lang].apply(transliteration[lang])
+    slovnik['isv'] = slovnik['isv'].str.replace("!", "").str.replace("#", "").str.lower()
+
 
 def iskati2(jezyk, slovo, sheet, pos=None):
     if pos is not None:
         pos = UDPos2OpenCorpora(pos.lower())
     najdene_slova = []
     # could be done on loading
-    sheet['isv'] = sheet['isv'].str.replace("!", "").str.replace("#", "").str.lower()
     slovo = transliteration[jezyk](slovo)
-    sheet[jezyk] = sheet[jezyk].apply(transliteration[jezyk])
 
     # lang-specific logic
 
-    for i, stroka in sheet.iterrows():
-        cell = stroka[jezyk]
-
-        if slovo in stroka[jezyk].split(", "):
-            if pos is not None:
-                if stroka["pos"] in pos:
-                    najdene_slova.append(i)
-                else:
-                    print("~~~~", stroka['isv'], pos, ' != ', stroka['pos'])
-            else:
+    candidates = sheet[sheet[jezyk].str.split(", ").apply(lambda x: slovo in x)]
+    for i, stroka in candidates.iterrows():
+        if pos is not None:
+            if stroka["pos"] in pos:
                 najdene_slova.append(i)
+            else:
+                print("~~~~", stroka['isv'], pos, ' != ', stroka['pos'])
+        else:
+            najdene_slova.append(i)
     # najdene_slova = reversed(sorted(najdene_slova, key=lambda x: x['type']))
     # return [x['isv'] for x in najdene_slova]
     return najdene_slova

@@ -1,11 +1,8 @@
-# THIS IS A HORRIBLE PROTOTYPE
-# DO NOT TOUCH
-
 import pandas as pd
 from isv_nlp_utils import constants
 
 import ujson
-from translation_aux import inflect_carefully, UDFeats2OpenCorpora, infer_pos, iskati2
+from translation_aux import inflect_carefully, UDFeats2OpenCorpora, infer_pos, iskati2, prepare_slovnik
 
 import conllu
 import requests
@@ -22,6 +19,18 @@ def download_slovnik():
     dfs['words']['id'] = dfs['words']['id'].fillna(0.0).astype(int)
     dfs['words']['pos'] = dfs['words'].partOfSpeech.apply(infer_pos)
     dfs['words'].to_pickle("slovnik.pkl")
+    return dfs
+
+def get_slovnik():
+    if os.path.isfile("slovnik.pkl"):
+        print("Found 'slovnik.pkl' file, using it")
+        dfs = {"words": pd.read_pickle("slovnik.pkl")}
+    else:
+        print("Downloading dictionary data from Google Sheets...")
+        dfs = download_slovnik()
+        dfs['words'].to_pickle("slovnik.pkl")
+        print("Download is completed succesfully.")
+    prepare_slovnik(dfs['words'])
     return dfs
 
 
@@ -92,6 +101,8 @@ def prepare_parsing(text, model_name):
                 "model": model_name
             }
         )
+        print(r)
+        print(r.text)
         data = ujson.loads(r.text)['result']
         return udpipe2df(data)
 
@@ -125,7 +136,7 @@ def special_case(token_row_data, src_lang):
 import re
 REFL_REMOVER = re.compile(" sę$")
 
-def translate_sentence(sent, src_lang, dfs, etm_morph):
+def translate_sentence(sent, src_lang, slovnik, etm_morph):
     result = []
     inflect_data_array = []
     isv_lemmas_array = []
@@ -141,8 +152,8 @@ def translate_sentence(sent, src_lang, dfs, etm_morph):
 
         lemma = token_row_data['lemma']
 
-        found = iskati2(src_lang, lemma, dfs['words'], pos=token_row_data['pos'])
-        rows_found = dfs['words'].loc[found, :].sort_values(by='type')
+        found = iskati2(src_lang, lemma, slovnik, pos=token_row_data['pos'])
+        rows_found = slovnik.loc[found, :].sort_values(by='type')
         if not found:
             shallow_translated = reverse_flavorize(token_row_data.form, token_row_data.pos, token_row_data.feats, src_lang)
             subresult.append("[?" + shallow_translated + "?]")
@@ -239,20 +250,22 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if os.path.isfile("slovnik.pkl"):
-        print("Found 'slovnik.pkl' file, using it")
-        dfs = {"words": pd.read_pickle("slovnik.pkl")}
-    else:
-        print("Downloading dictionary data from Google Sheets...")
-        dfs = download_slovnik()
-        dfs['words'].to_pickle("slovnik.pkl")
-        print("Download is completed succesfully.")
+    dfs = get_slovnik()
+    slovnik = dfs['words']
+    prepare_slovnik(slovnik)
+
     parsed = prepare_parsing(args.text, args.lang)
     lang = args.lang
     if args.lang == "ru_slovnet":
         lang = "ru"
     etm_morph = constants.create_analyzers_for_every_alphabet(args.path)['etm']
-    translated, debug_details = translate_sentence(parsed, lang, dfs, etm_morph)
-    html = debug_details.to_html() + translation_candidates_as_html(translated)
-
-    args.outfile.write(html)
+    translated, debug_details = translate_sentence(parsed, lang, dfs["words"], etm_morph)
+    if args.format == "html":
+        html = translation_candidates_as_html(translated)
+        if args.debug:
+            html += debug_details.to_html()
+        args.outfile.write(html)
+    if args.format == "json":
+        result = {"translation": translated}
+        if args.debug:
+            result['details'] = debug_details.to_json()
