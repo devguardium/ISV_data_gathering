@@ -62,6 +62,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     slovnik = get_slovnik()['words']
     etm_morph = create_analyzers_for_every_alphabet(args.path)['etm']
+
+    # TODO: fix diacritics in slovnik
+    etm_morph.char_substitutes['e'.encode()] = ("ė".encode(), 'ė')
+    print(etm_morph.char_substitutes)
+
     app = create_app(etm_morph, slovnik)
 
     app.run(host='localhost', port=args.port, debug=True)

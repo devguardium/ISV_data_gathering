@@ -123,6 +123,7 @@ def prepare_slovnik(slovnik):
     for lang in LANGS:
         slovnik[lang].str.replace(brackets_regex, "")
         slovnik[lang] = slovnik[lang].apply(transliteration[lang])
+        slovnik[lang + "_set"] = slovnik[lang].str.split(", ").apply(lambda x: set(x))
     slovnik['isv'] = slovnik['isv'].str.replace("!", "").str.replace("#", "").str.lower()
 
 
@@ -130,12 +131,9 @@ def iskati2(jezyk, slovo, sheet, pos=None):
     if pos is not None:
         pos = UDPos2OpenCorpora(pos.lower())
     najdene_slova = []
-    # could be done on loading
     slovo = transliteration[jezyk](slovo)
 
-    # lang-specific logic
-
-    candidates = sheet[sheet[jezyk].str.split(", ").apply(lambda x: slovo in x)]
+    candidates = sheet[sheet[jezyk + "_set"].apply(lambda x: slovo in x)]
     for i, stroka in candidates.iterrows():
         if pos is not None:
             if stroka["pos"] in pos:
