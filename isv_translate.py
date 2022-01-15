@@ -120,8 +120,6 @@ def special_case(token_row_data, src_lang):
 
     if token_row_data.pos == "VERB" and token_row_data.form == "нет":
         return "ne jest"  # TODO: ne sut?
-    if token_row_data.lemma == "не":
-        return "ne"
     if token_row_data.lemma == "это":
         return "tuto"
     '''
@@ -140,6 +138,7 @@ def translate_sentence(sent, src_lang, slovnik, etm_morph):
     result = []
     inflect_data_array = []
     isv_lemmas_array = []
+    types_array = []
     for idx, token_row_data in sent.iterrows():
         subresult = []
         special_translation = special_case(token_row_data, src_lang)
@@ -148,16 +147,18 @@ def translate_sentence(sent, src_lang, slovnik, etm_morph):
             result.append(subresult)
             inflect_data_array.append([])
             isv_lemmas_array.append([])
+            types_array.append("valid")
             continue
 
         lemma = token_row_data['lemma']
 
-        found = iskati2(src_lang, lemma, slovnik, pos=token_row_data['pos'])
+        found, found_type = iskati2(src_lang, lemma, slovnik, pos=token_row_data['pos'])
         rows_found = slovnik.loc[found, :].sort_values(by='type')
         if not found:
             shallow_translated = reverse_flavorize(token_row_data.form, token_row_data.pos, token_row_data.feats, src_lang)
-            subresult.append("[?" + shallow_translated + "?]")
+            subresult.append(shallow_translated)
             translation_cands = []
+            found_type = "error"
             # TODO: or try to work with lemma instead?
             # shallow_translated = reverse_flavorize(token_row_data.lemma, token_row_data.pos, token_row_data.feats, src_lang)
             # translation_cands = [shallow_translated]
@@ -185,25 +186,32 @@ def translate_sentence(sent, src_lang, slovnik, etm_morph):
                 else:
                     inflected = [isv_lemma]
 
-                subresult += (inflected or ["[?" + isv_lemma + "?]"])
+                if inflected:
+                    subresult += inflected
+                else:
+                    subresult += [isv_lemma]
+                    found_type = "error"
             else:
                 subresult.append(isv_lemma)
 
         # remove duplicates
         subresult = list(set(subresult))
         result.append(subresult)
+        types_array.append(found_type)
     # print(["/".join(x).replace(", ", "/") for x in result])
     details_df = sent.copy()
     details_df["opencorpora_tags"] = inflect_data_array
     details_df["isv_lemmas"] = isv_lemmas_array
     details_df["translation_candidates"] = result
-    return result, details_df
+    details_df["translation_type"] = types_array
+    return details_df
 
 
-def translation_candidates_as_html(translation_array):
+def translation_candidates_as_html(translation_details):
     html_result = ""
     # html_result += '<form action="#">'
     html_result += '<p>'
+    translation_array = translation_details['translation_candidates']
     for i, cand in enumerate(translation_array):
         if len(cand) == 1:
             html_result += (cand[0] + " ")
@@ -216,6 +224,38 @@ def translation_candidates_as_html(translation_array):
     # html_result += ('<input type="submit" value="Submit" />')
     # html_result += ('</form>')
     return html_result
+
+def postprocess_translation_details(translation_details):
+    result_array = []
+    for idx, token_row_data in translation_details.iterrows():
+        if token_row_data.pos == "PUNCT":
+            result_array.append({
+                "str": token_row_data.translation_candidates[0],
+                "type": "space",
+            }) 
+        elif token_row_data.pos == "PROPN":
+            result_array.append({
+                "str": token_row_data.translation_candidates[0],
+                "forms": token_row_data.translation_candidates,
+                "type": "space",
+            }) 
+        else:
+            result_array.append({
+                "str": token_row_data.translation_candidates[0],
+                "forms": token_row_data.translation_candidates,
+                "type": token_row_data.translation_type,
+            }) 
+
+        if token_row_data.misc:
+            space_after = token_row_data.misc.get("SpaceAfter", " ")
+        else:
+            space_after = " "
+        if space_after != "No":
+            result_array.append({
+                "str": space_after,
+                "type": "space",
+            }) 
+    return result_array
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -259,13 +299,13 @@ if __name__ == "__main__":
     if args.lang == "ru_slovnet":
         lang = "ru"
     etm_morph = constants.create_analyzers_for_every_alphabet(args.path)['etm']
-    translated, debug_details = translate_sentence(parsed, lang, dfs["words"], etm_morph)
+    translation_details = translate_sentence(parsed, lang, dfs["words"], etm_morph)
     if args.format == "html":
-        html = translation_candidates_as_html(translated)
+        html = translation_candidates_as_html(translation_details)
         if args.debug:
-            html += debug_details.to_html()
+            html += translation_details.to_html()
         args.outfile.write(html)
     if args.format == "json":
-        result = {"translation": translated}
+        result = {"translation": postprocess_translation_details(translation_details)}
         if args.debug:
-            result['details'] = debug_details.to_json()
+            result['details'] = translation_details.to_json()

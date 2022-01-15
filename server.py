@@ -7,7 +7,7 @@ from isv_nlp_utils.spellcheck import perform_spellcheck
 import time
 
 from translation_aux import LANGS
-from isv_translate import translate_sentence, translation_candidates_as_html, get_slovnik, prepare_parsing
+from isv_translate import translate_sentence, translation_candidates_as_html, get_slovnik, prepare_parsing, postprocess_translation_details
 
 
 def create_app(etm_morph, slovnik):
@@ -30,8 +30,8 @@ def create_app(etm_morph, slovnik):
         parsed = prepare_parsing(text, lang)
         if lang == "ru_slovnet":
             lang = "ru"
-        translated, debug_details = translate_sentence(parsed, lang, slovnik, etm_morph)
-        html = translation_candidates_as_html(translated)
+        debug_details = translate_sentence(parsed, lang, slovnik, etm_morph)
+        html = translation_candidates_as_html(debug_details)
         if postfix == 'debug':
             html += debug_details.to_html()
         return html
@@ -44,10 +44,10 @@ def create_app(etm_morph, slovnik):
             abort(404)
 
         parsed = prepare_parsing(text, lang)
-        translated, debug_details = translate_sentence(parsed, lang, slovnik, etm_morph)
-        result = {"translation": translated}
+        translation_details = translate_sentence(parsed, lang, slovnik, etm_morph)
+        result = {"translation": postprocess_translation_details(translation_details)}
         if request.json.get("debug"):
-            result['details'] = debug_details.to_json()
+            result['details'] = translation_details.to_json()
 
         return jsonify(result)
  

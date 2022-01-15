@@ -134,17 +134,16 @@ def iskati2(jezyk, slovo, sheet, pos=None):
     slovo = transliteration[jezyk](slovo)
 
     candidates = sheet[sheet[jezyk + "_set"].apply(lambda x: slovo in x)]
-    for i, stroka in candidates.iterrows():
-        if pos is not None:
+    if pos is not None:
+        for i, stroka in candidates.iterrows():
             if stroka["pos"] in pos:
                 najdene_slova.append(i)
-            else:
-                print("~~~~", stroka['isv'], pos, ' != ', stroka['pos'])
-        else:
-            najdene_slova.append(i)
-    # najdene_slova = reversed(sorted(najdene_slova, key=lambda x: x['type']))
-    # return [x['isv'] for x in najdene_slova]
-    return najdene_slova
+    else:
+        najdene_slova = candidates.index.tolist()
+    if najdene_slova:
+        return najdene_slova, 'valid'
+    else:
+        return candidates.index.tolist(), 'maybe'
 
 
 def inflect_carefully(morph, isv_lemma, inflect_data):
