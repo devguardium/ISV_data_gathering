@@ -12,6 +12,10 @@ from isv_translate import translate_sentence, translation_candidates_as_html, ge
 
 def create_app(etm_morph, slovnik):
     """Create and configure an instance of the Flask application."""
+    # TODO: fix diacritics in slovnik
+    etm_morph.char_substitutes['e'.encode()] = ("ė".encode(), 'ė')
+    print(etm_morph.char_substitutes)
+
     app = Flask(__name__)
     cors = CORS(app)
     app.config["JSON_AS_ASCII"] = False
@@ -62,10 +66,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     slovnik = get_slovnik()['words']
     etm_morph = create_analyzers_for_every_alphabet(args.path)['etm']
-
-    # TODO: fix diacritics in slovnik
-    etm_morph.char_substitutes['e'.encode()] = ("ė".encode(), 'ė')
-    print(etm_morph.char_substitutes)
 
     app = create_app(etm_morph, slovnik)
 
