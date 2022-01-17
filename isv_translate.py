@@ -270,7 +270,10 @@ def postprocess_translation_details(translation_details):
         pos += cur_len
 
         if token_row_data.misc:
-            space_after = token_row_data.misc.get("SpaceAfter", " ")
+            space_after = token_row_data.misc.get("SpaceAfter") or token_row_data.misc.get("SpacesAfter")
+            if space_after is None:
+                space_after = " "
+            space_after = space_after.encode('utf8').decode('unicode-escape')
             print("space_after", [space_after, token_row_data.misc])
         else:
             space_after = " "
