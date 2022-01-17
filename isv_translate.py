@@ -271,7 +271,7 @@ def postprocess_translation_details(translation_details):
 
         if token_row_data.misc:
             space_after = token_row_data.misc.get("SpaceAfter", " ")
-            print([space_after])
+            print("space_after", [space_after, token_row_data.misc])
         else:
             space_after = " "
         if space_after != "No":
