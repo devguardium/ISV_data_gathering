@@ -175,14 +175,13 @@ def translate_sentence(sent, src_lang, slovnik, etm_morph):
             for lemma_with_trailing_space in translation_cands
         ]
 
-        inflect_data = UDFeats2OpenCorpora(token_row_data.feats or dict())
+        inflect_data = UDFeats2OpenCorpora(token_row_data.feats or dict(), src_lang)
         inflect_data_array.append(inflect_data)
         isv_lemmas_array.append(translation_cands)
         for isv_lemma in translation_cands:
             if token_row_data.feats:
                 if token_row_data.pos not in {"ADV", "ADP", "PART"}:
                     inflected = inflect_carefully(etm_morph, isv_lemma, inflect_data)
-                    inflected = [x.word for x in inflected]
                 else:
                     inflected = [isv_lemma]
 
@@ -227,34 +226,50 @@ def translation_candidates_as_html(translation_details):
 
 def postprocess_translation_details(translation_details):
     result_array = []
+    pos = 0
     for idx, token_row_data in translation_details.iterrows():
+        original_word = token_row_data.form
+        cur_len = len(original_word)
+        if original_word.is_upper() == original_word:
+            translation_candidates = [x.upper() for x in translation_candidates]
+        elif original_word[0].is_upper() == original_word[0]:
+            translation_candidates = [x[0].upper() + x[1:] for x in translation_candidates]
+
         if token_row_data.pos == "PUNCT":
             result_array.append({
                 "str": token_row_data.translation_candidates[0],
                 "type": "space",
-            }) 
+            })
         elif token_row_data.pos == "PROPN":
             result_array.append({
                 "str": token_row_data.translation_candidates[0],
                 "forms": token_row_data.translation_candidates,
                 "type": "space",
-            }) 
+                "begin": pos,
+                "end": pos + cur_len,
+            })
         else:
             result_array.append({
                 "str": token_row_data.translation_candidates[0],
                 "forms": token_row_data.translation_candidates,
                 "type": token_row_data.translation_type,
+                "begin": pos,
+                "end": pos + cur_len,
             }) 
+        pos += cur_len
 
         if token_row_data.misc:
             space_after = token_row_data.misc.get("SpaceAfter", " ")
+            print([space_after])
         else:
             space_after = " "
         if space_after != "No":
             result_array.append({
                 "str": space_after,
                 "type": "space",
-            }) 
+            })
+            pos += len(space_after)
+
     return result_array
 
 if __name__ == "__main__":

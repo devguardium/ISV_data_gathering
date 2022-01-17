@@ -23,7 +23,7 @@ def UDPos2OpenCorpora(pos):
         return ["noun"]
     return [pos]
 
-def UDFeats2OpenCorpora(feats):
+def UDFeats2OpenCorpora(feats, src_lang):
     result = []
     for key, value in feats.items():
         if key == "Animacy":
@@ -70,10 +70,13 @@ def UDFeats2OpenCorpora(feats):
             pass  # https://universaldependencies.org/ru/feat/VerbForm.html
         if key == 'Voice':
             if value.lower() == "act" and feats["VerbForm"] == "Part": 
-                result.append("actv")
+                if src_lang != "cs":
+                    result.append("actv")
             if value.lower() == "pass": 
                 result.append("pssv")
         # {'Mood': 'Ind', 'Tense': 'Past', 'VerbForm': 'Fin'}
+        if key == 'Polarity' and value == 'Neg':
+            result.append("neg")
     if len(result) < len(feats):
         print(f"Info loss? {feats} -> {result}")
     return set([x for x in result if x])
@@ -150,9 +153,13 @@ def inflect_carefully(morph, isv_lemma, inflect_data):
     print(isv_lemma, inflect_data)
     parsed = morph.parse(isv_lemma)[0]
     lexeme = parsed.lexeme
+    is_negative = False
 
     forbidden_tags = {tag[1:] for tag in inflect_data if tag[0] == "~"}
     inflect_data = {tag for tag in inflect_data if tag[0] != "~"}
+    if "neg" in inflect_data:
+        is_negative = True
+        inflect_data = {tag for tag in inflect_data if tag != "neg"}
 
     candidates = {
             form[1]: form.tag.grammemes & inflect_data for form in lexeme
@@ -169,6 +176,11 @@ def inflect_carefully(morph, isv_lemma, inflect_data):
         print("best_fit: ", best_fit)
         print("candidates: ", {k: v for k, v in candidates.items() if len(v) == len(best_fit[1])})
         print([parsed.inflect(cand.grammemes) for cand in best_candidates])
-    return [parsed.inflect(cand.grammemes) for cand in best_candidates]
+
+    result = [parsed.inflect(cand.grammemes) for cand in best_candidates]
+    result = [x.word for x in result]
+    if is_negative:
+        result = ["ne " + x for x in result]
+    return result
 
 
