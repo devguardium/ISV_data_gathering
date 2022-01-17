@@ -2,3 +2,5 @@ pandas
 ujson
 conllu
 requests
+openpyxl
+pyenchant

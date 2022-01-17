@@ -4,6 +4,9 @@ from isv_nlp_utils import constants
 import ujson
 from translation_aux import inflect_carefully, UDFeats2OpenCorpora, infer_pos, iskati2, prepare_slovnik
 
+from enchant.utils import levenshtein
+from isv_nlp_utils.normalizacija import transliterate_cyr2lat
+
 import conllu
 import requests
 import os
@@ -224,6 +227,13 @@ def translation_candidates_as_html(translation_details):
     # html_result += ('</form>')
     return html_result
 
+
+def select_by_naive_levenshtein(candidates, original_word):
+    return min(
+                candidates,
+                key=lambda x: levenshtein(transliterate_cyr2lat(original_word), x)
+    )
+
 def postprocess_translation_details(translation_details):
     result_array = []
     pos = 0
@@ -242,7 +252,7 @@ def postprocess_translation_details(translation_details):
             })
         elif token_row_data.pos == "PROPN":
             result_array.append({
-                "str": token_row_data.translation_candidates[0],
+                "str": select_by_naive_levenshtein(token_row_data.translation_candidates, original_word),
                 "forms": token_row_data.translation_candidates,
                 "type": "space",
                 "begin": pos,
@@ -250,7 +260,7 @@ def postprocess_translation_details(translation_details):
             })
         else:
             result_array.append({
-                "str": token_row_data.translation_candidates[0],
+                "str": select_by_naive_levenshtein(token_row_data.translation_candidates, original_word),
                 "forms": token_row_data.translation_candidates,
                 "type": token_row_data.translation_type,
                 "begin": pos,
