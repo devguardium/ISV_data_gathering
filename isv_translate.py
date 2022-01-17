@@ -240,9 +240,9 @@ def postprocess_translation_details(translation_details):
     for idx, token_row_data in translation_details.iterrows():
         original_word = token_row_data.form
         cur_len = len(original_word)
-        if original_word.is_upper() == original_word:
+        if original_word.upper() == original_word:
             translation_candidates = [x.upper() for x in translation_candidates]
-        elif original_word[0].is_upper() == original_word[0]:
+        elif original_word[0].upper() == original_word[0]:
             translation_candidates = [x[0].upper() + x[1:] for x in translation_candidates]
 
         if token_row_data.pos == "PUNCT":
