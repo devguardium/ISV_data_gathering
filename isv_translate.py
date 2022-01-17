@@ -240,6 +240,7 @@ def postprocess_translation_details(translation_details):
     for idx, token_row_data in translation_details.iterrows():
         original_word = token_row_data.form
         cur_len = len(original_word)
+        translation_candidates = token_row_data.translation_candidates
         if original_word.upper() == original_word:
             translation_candidates = [x.upper() for x in translation_candidates]
         elif original_word[0].upper() == original_word[0]:
@@ -247,21 +248,21 @@ def postprocess_translation_details(translation_details):
 
         if token_row_data.pos == "PUNCT":
             result_array.append({
-                "str": token_row_data.translation_candidates[0],
+                "str": translation_candidates[0],
                 "type": "space",
             })
         elif token_row_data.pos == "PROPN":
             result_array.append({
-                "str": select_by_naive_levenshtein(token_row_data.translation_candidates, original_word),
-                "forms": token_row_data.translation_candidates,
+                "str": select_by_naive_levenshtein(translation_candidates, original_word),
+                "forms": translation_candidates,
                 "type": "space",
                 "begin": pos,
                 "end": pos + cur_len,
             })
         else:
             result_array.append({
-                "str": select_by_naive_levenshtein(token_row_data.translation_candidates, original_word),
-                "forms": token_row_data.translation_candidates,
+                "str": select_by_naive_levenshtein(translation_candidates, original_word),
+                "forms": translation_candidates,
                 "type": token_row_data.translation_type,
                 "begin": pos,
                 "end": pos + cur_len,
