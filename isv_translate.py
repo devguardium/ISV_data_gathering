@@ -256,7 +256,7 @@ def postprocess_translation_details(translation_details):
                 "str": select_by_naive_levenshtein(translation_candidates, original_word),
                 "forms": translation_candidates,
                 "type": "space",
-                "begin": pos,
+                "start": pos,
                 "end": pos + cur_len,
             })
         else:
@@ -264,7 +264,7 @@ def postprocess_translation_details(translation_details):
                 "str": select_by_naive_levenshtein(translation_candidates, original_word),
                 "forms": translation_candidates,
                 "type": token_row_data.translation_type,
-                "begin": pos,
+                "start": pos,
                 "end": pos + cur_len,
             }) 
         pos += cur_len
@@ -274,7 +274,6 @@ def postprocess_translation_details(translation_details):
             if space_after is None:
                 space_after = " "
             space_after = space_after.encode('utf8').decode('unicode-escape')
-            print("space_after", [space_after, token_row_data.misc])
         else:
             space_after = " "
         if space_after != "No":
