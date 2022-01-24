@@ -191,7 +191,7 @@ def translate_sentence(sent, src_lang, slovnik, etm_morph):
                 if inflected:
                     subresult += inflected
                 else:
-                    subresult += [isv_lemma]
+                    subresult += [ "[?" + isv_lemma + "?]"]
                     found_type = "error"
             else:
                 subresult.append(isv_lemma)

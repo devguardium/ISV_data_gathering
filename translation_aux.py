@@ -151,6 +151,12 @@ def iskati2(jezyk, slovo, sheet, pos=None):
 
 def inflect_carefully(morph, isv_lemma, inflect_data):
     print(isv_lemma, inflect_data)
+    parsed = morph.parse(isv_lemma)
+    if not parsed:
+        # some sort of error happened
+        print("ERROR:", isv_lemma, inflect_data)
+        return []
+
     parsed = morph.parse(isv_lemma)[0]
     lexeme = parsed.lexeme
     is_negative = False
