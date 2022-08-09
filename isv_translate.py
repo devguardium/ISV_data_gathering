@@ -4,7 +4,7 @@ from isv_nlp_utils import constants
 import ujson
 from translation_aux import inflect_carefully, UDFeats2OpenCorpora, infer_pos, iskati2, prepare_slovnik
 
-from enchant.utils import levenshtein
+from rapidfuzz.string_metric import levenshtein
 from isv_nlp_utils.normalizacija import transliterate_cyr2lat
 
 import conllu
@@ -17,21 +17,21 @@ def download_slovnik():
     dfs = pd.read_excel(
         io='https://docs.google.com/spreadsheets/d/e/2PACX-1vRsEDDBEt3VXESqAgoQLUYHvsA5yMyujzGViXiamY7-yYrcORhrkEl5g6JZPorvJrgMk6sjUlFNT4Km/pub?output=xlsx',
         engine='openpyxl',
-        sheet_name=['words', 'suggestions']
+        sheet_name=['words']
     )
     dfs['words']['id'] = dfs['words']['id'].fillna(0.0).astype(int)
     dfs['words']['pos'] = dfs['words'].partOfSpeech.apply(infer_pos)
-    dfs['words'].to_pickle("slovnik.pkl")
     return dfs
 
-def get_slovnik():
+def get_slovnik(save=True):
     if os.path.isfile("slovnik.pkl"):
         print("Found 'slovnik.pkl' file, using it")
         dfs = {"words": pd.read_pickle("slovnik.pkl")}
     else:
         print("Downloading dictionary data from Google Sheets...")
         dfs = download_slovnik()
-        dfs['words'].to_pickle("slovnik.pkl")
+        if save:
+            dfs['words'].to_pickle("slovnik.pkl")
         print("Download is completed succesfully.")
     prepare_slovnik(dfs['words'])
     return dfs

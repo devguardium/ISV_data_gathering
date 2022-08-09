@@ -61,7 +61,7 @@ if __name__ == "__main__":
        help='The port to listen on (defaults to 2901).')
     parser.add_argument(
         '-p', '--path', help="path to DAWG dictionary files (a format that pymorphy2 uses)",
-        default="."
+        default="./"
     )
     args = parser.parse_args()
     slovnik = get_slovnik()['words']
