@@ -128,6 +128,7 @@ def prepare_slovnik(slovnik):
         slovnik[lang] = slovnik[lang].apply(transliteration[lang])
         slovnik[lang + "_set"] = slovnik[lang].str.split(", ").apply(lambda x: set(x))
     slovnik['isv'] = slovnik['isv'].str.replace("!", "").str.replace("#", "").str.lower()
+    slovnik['type'] = slovnik['type'].astype(str)
 
 
 def iskati2(jezyk, slovo, sheet, pos=None):
