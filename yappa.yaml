@@ -21,6 +21,7 @@ excluded_paths:
 - .idea
 - .DS_Store
 - .yc
+- slovnik.pkl
 environment: {}
 named_service_accounts: {}
 service_account_id: null
