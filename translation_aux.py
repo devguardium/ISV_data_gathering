@@ -38,6 +38,7 @@ def UDFeats2OpenCorpora(feats, src_lang):
                 "Ins": 'ablt',
                 "Loc": 'loct',
                 "Voc": 'voct',
+                "Acc,Nom": 'accs',  # TODO: handle this case better (sometimes happens with Bulgarian)
             }
             result.append(CASES_MAP[value])
         if key == 'Gender':
@@ -77,7 +78,7 @@ def UDFeats2OpenCorpora(feats, src_lang):
         # {'Mood': 'Ind', 'Tense': 'Past', 'VerbForm': 'Fin'}
         if key == 'Polarity' and value == 'Neg':
             result.append("neg")
-    if len(result) < len(feats):
+    if False and len(result) < len(feats):
         print(f"Info loss? {feats} -> {result}")
     return set([x for x in result if x])
 
@@ -150,12 +151,14 @@ def iskati2(jezyk, slovo, sheet, pos=None):
         return candidates.index.tolist(), 'maybe'
 
 
-def inflect_carefully(morph, isv_lemma, inflect_data):
-    print(isv_lemma, inflect_data)
+def inflect_carefully(morph, isv_lemma, inflect_data, verbose=False):
+    if verbose:
+        print(isv_lemma, inflect_data)
     parsed = morph.parse(isv_lemma)
     if not parsed:
         # some sort of error happened
-        print("ERROR:", isv_lemma, inflect_data)
+        if verbose:
+            print("ERROR:", isv_lemma, inflect_data)
         return []
 
     parsed = morph.parse(isv_lemma)[0]
@@ -176,13 +179,15 @@ def inflect_carefully(morph, isv_lemma, inflect_data):
     best_fit = sorted(candidates.items(), key=lambda x: len(x[1]))[-1]
     best_candidates = {k: v for k, v in candidates.items() if len(v) == len(best_fit[1])}
     if len(best_fit[1]) == 0 and len(inflect_data) > 0:
-        print("have trouble in finding anything like ", inflect_data, " for ", isv_lemma)
+        if verbose:
+            print("have trouble in finding anything like ", inflect_data, " for ", isv_lemma)
         return []
     if len(best_fit[1]) != len(inflect_data):
-        print("have trouble in finding ", inflect_data, " for ", isv_lemma)
-        print("best_fit: ", best_fit)
-        print("candidates: ", {k: v for k, v in candidates.items() if len(v) == len(best_fit[1])})
-        print([parsed.inflect(cand.grammemes) for cand in best_candidates])
+        if verbose:
+            print("have trouble in finding ", inflect_data, " for ", isv_lemma)
+            print("best_fit: ", best_fit)
+            print("candidates: ", {k: v for k, v in candidates.items() if len(v) == len(best_fit[1])})
+            print([parsed.inflect(cand.grammemes) for cand in best_candidates])
 
     result = [parsed.inflect(cand.grammemes) for cand in best_candidates]
     result = [x.word for x in result]

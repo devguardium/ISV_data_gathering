@@ -20,7 +20,7 @@ def download_slovnik():
         sheet_name=['words']
     )
     dfs['words']['id'] = dfs['words']['id'].fillna(0.0).astype(int)
-    dfs['words']['pos'] = dfs['words'].partOfSpeech.apply(infer_pos)
+    dfs['words']['pos'] = dfs['words'].partOfSpeech.astype(str).apply(infer_pos)
     return dfs
 
 def get_slovnik(save=True):
@@ -47,7 +47,13 @@ def udpipe2df(data):
         df['sent_id'] = i
         df = df.set_index(["sent_id", "id"])
         result.append(df)
-    return pd.concat(result).rename(columns={"upos": "pos"}).drop(columns=["xpos", "deps"])
+    res_df = pd.concat(result)
+    if "upos" in res_df.columns:
+        res_df = res_df.rename(columns={"upos": "pos"})
+    if "upostag" in res_df.columns:
+        res_df = res_df.rename(columns={"upostag": "pos"})
+
+    return res_df.drop(columns=["xpos", "deps"], errors="ignore")
 
 def slovnet2df(markup, vocab):
     from natasha.norm import inflect_words, recover_shapes
@@ -91,7 +97,6 @@ def prepare_parsing(text, model_name):
             chunk.append(tokens)
         markup = morph.map(chunk)
         df = slovnet2df(markup, MorphVocab())
-        print(df)
         return df
     else:
         r = requests.post(
@@ -104,8 +109,6 @@ def prepare_parsing(text, model_name):
                 "model": model_name
             }
         )
-        print(r)
-        print(r.text)
         data = ujson.loads(r.text)['result']
         return udpipe2df(data)
 
