@@ -4,3 +4,6 @@ out_isv_cyr/
 out_isv_lat/
 out_isv_etm/
 __pycache__/
+
+get-pip.py
+venv/
