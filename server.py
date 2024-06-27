@@ -69,5 +69,5 @@ if __name__ == "__main__":
 
     app = create_app(etm_morph, slovnik)
 
-    app.run(host='localhost', port=args.port, debug=True)
+    app.run(host='localhost', port=args.port, debug=False)
 
