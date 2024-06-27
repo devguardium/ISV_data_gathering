@@ -125,7 +125,7 @@ def prepare_slovnik(slovnik):
     import re
     brackets_regex = re.compile(" \(.*\)")
     for lang in LANGS:
-        slovnik[lang] = slovnik[lang].str.replace(brackets_regex, "").astype(str)
+        slovnik[lang] = slovnik[lang].str.replace(brackets_regex, "", regex=True).astype(str)
         slovnik[lang] = slovnik[lang].apply(transliteration[lang])
         slovnik[lang + "_set"] = slovnik[lang].str.split(", ").apply(lambda x: set(x))
     slovnik['isv'] = slovnik['isv'].str.replace("!", "").str.replace("#", "").str.lower()
