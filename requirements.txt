@@ -10,7 +10,7 @@ click
 colorama
 conllu
 cryptography
-DAWG-Python
+DAWG2-Python
 docopt
 et-xmlfile
 Flask
@@ -21,7 +21,7 @@ h11
 httpcore
 httpx
 idna
-isv-nlp-utils @ git+https://github.com/bt2901/ISV_NLP_utils@e79ed025df8d9f24c654cd72719227f86ef2b5ec
+isv-nlp-utils @ git+https://github.com/bt2901/ISV_NLP_utils@master
 itsdangerous
 Jinja2
 jmespath
@@ -33,7 +33,7 @@ pandas
 protobuf
 pycparser
 PyJWT
-pymorphy2
+pymorphy2 @ git+https://github.com/pymorphy2-fork/pymorphy2
 pymorphy2-dicts-ru
 pyparsing
 PyYAML
@@ -44,5 +44,3 @@ sniffio
 ujson
 urllib3
 wincertstore
-yandexcloud
-yappa
