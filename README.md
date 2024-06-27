@@ -1,6 +1,40 @@
 # ISV_data_gathering
 
+## Development
+- Activate virtual environment
+```sh
+  source venv/bin/activate
+```
 
+- Run server in development mode
+  ```sh
+    python server.py
+  ```
+
+  - Ping server
+  In a second tab, execute:
+  ```sh
+      curl -X POST http://localhost:2901/api/ \
+    -H "Content-Type: application/json" \
+    -d '{
+      "text": "Яблоко слишком маленькое.",
+      "lang": "ru"
+    }'
+```
+
+ - In case you need to
+ ```sh
+    # Exit venv
+    deactivate
+
+    # Remove venv
+    rm -r venv
+ ```
+
+  - Apply PEP 8
+  ```sh
+    black . --exclude venv
+  ```
 
 ## Setting up a development machine on Digital Ocean
 
@@ -18,10 +52,14 @@
    ```
 
   - Copy your github ssh key to droplet
-  `scp ~/.ssh/id_ed25519 do-ubuntu-24:/root/.ssh/`
+  ```sh
+    scp ~/.ssh/id_ed25519 do-ubuntu-24:/root/.ssh/
+  ```
 
   - Connect to the droplet, e.g.
-  `ssh do-ubuntu-24`
+  ```sh
+    ssh do-ubuntu-24
+  ```
   
   - In case you like to use micro editor
   ```sh
@@ -29,7 +67,9 @@
   ```
 
   - Clone repo
-  `git clone git@github.com:devguardium/ISV_data_gathering.git`
+  ```sh
+    git clone git@github.com:devguardium/ISV_data_gathering.git
+  ```
 
   - Configure repo for your username and email, e.g.
   ```sh
@@ -61,34 +101,14 @@
     pip install -r requirements.txt
   ```
 
+  - Install dev dependencies
+  ```sh
+    pip install -r dev-requirements.txt
+  ```
+
   - Copy Slovnik files
   ```sh
     scp -r out_isv_cyr/ do-ubuntu-24:/root/ISV_data_gathering
     scp -r out_isv_etm/ do-ubuntu-24:/root/ISV_data_gathering
     scp -r out_isv_lat/ do-ubuntu-24:/root/ISV_data_gathering
   ```
-  - run server in development mode
-  ```sh
-  python server.py
-  ```
-
-  - Ping server
-  In a second tab, execute:
-  ```sh
-      curl -X POST http://localhost:2901/api/ \
-    -H "Content-Type: application/json" \
-    -d '{
-      "text": "Яблоко слишком маленькое.",
-      "lang": "ru"
-    }'
-```
-
- - In case you need to
- ```sh
-    # Exit venv
-    deactivate
-
-    # Remove venv
-    rm -r venv
-
- ```
