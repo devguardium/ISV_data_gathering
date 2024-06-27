@@ -11,18 +11,21 @@
     python server.py
   ```
 
-  - Ping server
-  In a second tab, execute:
+- Ping server
+  
   ```sh
+  # In a second tab, execute
       curl -X POST http://localhost:2901/api/ \
     -H "Content-Type: application/json" \
     -d '{
       "text": "Яблоко слишком маленькое.",
       "lang": "ru"
     }'
-```
+    
 
- - In case you need to
+
+- In case you need to
+
  ```sh
     # Exit venv
     deactivate
@@ -73,8 +76,8 @@
 
   - Configure repo for your username and email, e.g.
   ```sh
-    git config user.name "devguardium"
-    git config user.email "dev@clyp.eu"
+    git config user.name "[YOUR USER]"
+    git config user.email "YOUR EMAIL"
 
     git config --list
   ```
@@ -112,3 +115,70 @@
     scp -r out_isv_etm/ do-ubuntu-24:/root/ISV_data_gathering
     scp -r out_isv_lat/ do-ubuntu-24:/root/ISV_data_gathering
   ```
+
+## Deployment to Digital Ocean
+
+### Prerequsites
+
+  - Create a new Ubuntu 24 LTS droplet
+    - Provide SSH key for accessing the droplet
+
+  - Configure local SSH client to access the droplet
+  ```ssh-config
+    # ubuntu 24 machine as root
+    Host do-ubuntu-24
+        HostName [COPY-DROPLET-IP-HERE]
+        IdentityFile ~/.ssh/id_digital_ocean
+        IdentitiesOnly yes
+        User root
+   ```
+
+  - Connect to the droplet, e.g.
+  ```sh
+    ssh do-ubuntu-24
+  ```
+  
+  - In case you like to use micro editor
+  ```sh
+    apt install micro
+  ```
+
+  - Clone repo
+  ```sh
+    # Cloning is over https, so no ssh key required
+    # N.B. No changes could be pushed back to git
+    git clone https://github.com/devguardium/ISV_data_gathering.git
+  ```
+
+   - Install Python 3.9
+  ```sh
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt update
+    sudo apt install python3.9 python3.9-venv
+
+    python3.9 --version
+  ```
+
+  - Create virtual environment
+  ```sh
+    python3.9 -m venv venv --without-pip
+    source venv/bin/activate
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    python3.9 get-pip.py
+  ```
+
+  - Install project dependencies
+  ```sh
+    pip install -r requirements.txt
+  ```
+
+  - Copy Slovnik files
+  ```sh
+    scp -r out_isv_cyr/ do-ubuntu-24:/root/ISV_data_gathering
+    scp -r out_isv_etm/ do-ubuntu-24:/root/ISV_data_gathering
+    scp -r out_isv_lat/ do-ubuntu-24:/root/ISV_data_gathering
+  ```
+
+### Run in production
+
+  - Run under gunicorn
