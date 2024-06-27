@@ -4,7 +4,7 @@ from isv_nlp_utils import constants
 import ujson
 from translation_aux import inflect_carefully, UDFeats2OpenCorpora, infer_pos, iskati2, prepare_slovnik
 
-from rapidfuzz.string_metric import levenshtein
+from rapidfuzz.distance import Levenshtein
 from isv_nlp_utils.normalizacija import transliterate_cyr2lat
 
 import conllu
@@ -234,7 +234,7 @@ def translation_candidates_as_html(translation_details):
 def select_by_naive_levenshtein(candidates, original_word):
     return min(
                 candidates,
-                key=lambda x: levenshtein(transliterate_cyr2lat(original_word), x)
+                key=lambda x: Levenshtein.distance(transliterate_cyr2lat(original_word), x)
     )
 
 def postprocess_translation_details(translation_details):
