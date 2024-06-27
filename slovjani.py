@@ -22,7 +22,7 @@ class Czlanok:
         self.title_EN = ""
         self.abstract_ISV = ""
         self.abstract_EN = ""
-        self.text = None 
+        self.text = None
         self.authors = ""
         self.state = 0
 
@@ -41,24 +41,22 @@ class Czlanok:
             else:
                 self.abstract_EN += current_text
         else:
-             if not self.text and not self.abstract_ISV:
-                 self.authors += current_text
+            if not self.text and not self.abstract_ISV:
+                self.authors += current_text
         if span["size"] == 12 and span["flags"] == 4:
             if self.text is None:
                 self.text = ""
             self.text += current_text
-        if "Italic" in span["font"] and "Bold" in span['font']:
+        if "Italic" in span["font"] and "Bold" in span["font"]:
             self.title_EN += current_text
 
     def __repr__(self):
         return f"{self.title_ISV}\n{self.authors}\n{self.abstract_ISV}\n\n({self.title_EN})\n({self.abstract_EN})"
 
 
-
-
 if __name__ == "__main__":
     filename = r"C:\dev\ISV_data_gathering\slovjani_info\archive_2020-1.pdf"
-    
+
     czlanky = []
     with fitz.open(filename) as doc:
         text = []
@@ -73,14 +71,14 @@ if __name__ == "__main__":
                 print(langdetect.detect_langs(local_text))
                 text += [page.getText()]
                 # if "Pandemija" in local_text and "ključne slova" in local_text:
-                data = page.getText("dict")['blocks']
+                data = page.getText("dict")["blocks"]
                 for entry in data:
-                    if entry['bbox'][3] > 780:
+                    if entry["bbox"][3] > 780:
                         # probably a header
                         continue
                     # print(entry['number'])
-                    for line in entry.get('lines', []):
-                        for span in line['spans']:
+                    for line in entry.get("lines", []):
+                        for span in line["spans"]:
                             if span["size"] == 18 and tuty_czlanok.text:
                                 print(tuty_czlanok)
                                 czlanky.append(tuty_czlanok)
@@ -91,8 +89,6 @@ if __name__ == "__main__":
                             else:
                                 tuty_czlanok.process_span(span)
 
-    
-    #for page in text[1:]:
+    # for page in text[1:]:
     #    for token in iterate_over_text(page):
     #        print(token)
-

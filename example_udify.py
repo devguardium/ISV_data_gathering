@@ -30,16 +30,14 @@ config_file = archive_dir / "config.json"
 overrides = {}
 if device is not None:
     overrides["trainer"] = {"cuda_device": device}
-#if args.lazy:
+# if args.lazy:
 #    overrides["dataset_reader"] = {"lazy": args.lazy}
 configs = [Params(overrides), Params.from_file(config_file)]
 params = util.merge_configs(configs)
 
 predictor = "udify_text_predictor"
 
-# predictor.output_conllu = True 
-
-
+# predictor.output_conllu = True
 
 
 from conllu.parser import parse_dict_value
@@ -47,19 +45,22 @@ from translation_aux import prepare_slovnik
 from isv_translate import get_slovnik, download_slovnik
 
 from isv_nlp_utils import constants
-from isv_translate import translate_sentence, postprocess_translation_details, prepare_parsing
+from isv_translate import (
+    translate_sentence,
+    postprocess_translation_details,
+    prepare_parsing,
+)
 
 PATH = r"C:\dev\ISV_data_gathering\\"
 
 dfs = get_slovnik()
-slovnik = dfs['words']
+slovnik = dfs["words"]
 prepare_slovnik(slovnik)
-etm_morph = constants.create_analyzers_for_every_alphabet(PATH)['etm']
+etm_morph = constants.create_analyzers_for_every_alphabet(PATH)["etm"]
 
 from allennlp.predictors.predictor import Predictor
 
-archive = load_archive(archive_dir,
-                       cuda_device=cuda_device)
+archive = load_archive(archive_dir, cuda_device=cuda_device)
 
 from allennlp.models.archival import load_archive
 
@@ -71,16 +72,24 @@ def parse_with_udify(predictor, src_lang, text):
     parsed = predictor.predict_json({"sentence": text})
     df = pd.DataFrame()
 
-    cols1 = ['words', 'upos', 'feats', 'lemmas', 'predicted_heads', 'predicted_dependencies']
+    cols1 = [
+        "words",
+        "upos",
+        "feats",
+        "lemmas",
+        "predicted_heads",
+        "predicted_dependencies",
+    ]
     cols2 = ["form", "pos", "feats", "lemma", "head", "deprel"]
 
     for col_src, col_dst in zip(cols1, cols2):
         df[col_dst] = parsed[col_src]
 
-    df['misc'] = ""
-    df['feats'] = df['feats'].apply(parse_dict_value)
-    df['misc'] = df['misc'].apply(parse_dict_value)
+    df["misc"] = ""
+    df["feats"] = df["feats"].apply(parse_dict_value)
+    df["misc"] = df["misc"].apply(parse_dict_value)
     return df
+
 
 def translate_with_udify(predictor, slovnik, etm_morph, src_lang, text):
     df = parse_with_udify(predictor, src_lang, text)
@@ -89,4 +98,4 @@ def translate_with_udify(predictor, slovnik, etm_morph, src_lang, text):
 
 
 details = translate_with_udify(predictor, slovnik, etm_morph, lang, sent)
-print("".join(x['str'] for x in postprocess_translation_details(details)))
+print("".join(x["str"] for x in postprocess_translation_details(details)))

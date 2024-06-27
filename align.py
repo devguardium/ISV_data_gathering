@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer
 
 # model = SentenceTransformer('sentence-transformers/distiluse-base-multilingual-cased-v2')
 # model = SentenceTransformer('sentence-transformers/LaBSE')
-model = SentenceTransformer('sentence-transformers/paraphrase-xlm-r-multilingual-v1')
+model = SentenceTransformer("sentence-transformers/paraphrase-xlm-r-multilingual-v1")
 
 ISV_text = """Tut jest anglijsky kurs gramatiky.
 Preporučajemo vsegda koristati toj slovnik medžuslovjanskogo jezyka za učenje slov i gramatiky.
@@ -59,7 +59,9 @@ Jestvujut takože specijalne klavjatury za kompjuterne sistemy:
 razširjena MS latinica na medžunarodnyh latiničnyh klaviaturah (kako napriměr hrvatska v variantu unicodeus). Polna kiriličska klavjatura jest na standardnoj ukrainskoj klavjaturě.
 V tom poslanju od Roberta jest mnogo informaciji itak tuta pouka jest jedino jego skračenje:
 (pytanje 3 v tom poslanju)
-""".split('\n')
+""".split(
+    "\n"
+)
 EN_text = """Here is grammar course of Interslavic Language.
 We recommend always using this Interslavic dictionary for learning words and grammar.
 (Even the "oldest" speakers use it often)
@@ -108,7 +110,9 @@ There are also special layouts for computer systems:
     extended Interslavic latin on international latin layouts (for example Croatian in the unicodeus variant). The full cyrrylic keyboard is in the standard Ukrainian one.
 There is a lot of information in this message made by Roberto , and so this lesson is simply a shorter version of it.
     (in Interslavic, question 3 in the message)
-""".split("\n")
+""".split(
+    "\n"
+)
 
 vectors1, vectors2 = [], []
 
@@ -123,6 +127,7 @@ lat2cyr_trans = str.maketrans(lat_alphabet, cyr_alphabet)
 def transliterate_lat2cyr(text):
     return text.translate(cyr2lat_trans)
 
+
 print(len(ISV_text))
 print(len(EN_text))
 for line_isv, line_en in zip(ISV_text[:50], EN_text[:50]):
@@ -130,23 +135,23 @@ for line_isv, line_en in zip(ISV_text[:50], EN_text[:50]):
     vectors1.append(model.encode(line_isv))
     vectors2.append(model.encode(line_en))
 
+
 def get_sim_matrix(vec1, vec2, window=10):
-    sim_matrix=np.zeros((len(vec1), len(vec2)))
-    k = len(vec1)/len(vec2)
+    sim_matrix = np.zeros((len(vec1), len(vec2)))
+    k = len(vec1) / len(vec2)
     for i in range(len(vec1)):
         for j in range(len(vec2)):
-            if (j*k > i-window) & (j*k < i+window):
+            if (j * k > i - window) & (j * k < i + window):
                 sim = 1 - distance.cosine(vec1[i], vec2[j])
-                sim_matrix[i,j] = sim
+                sim_matrix[i, j] = sim
     return sim_matrix
+
 
 sim_matrix = get_sim_matrix(vectors1, vectors2, window=50)
 
 threshold = None
-plt.figure(figsize=(6,5))
+plt.figure(figsize=(6, 5))
 sbn.heatmap(sim_matrix, cmap="Greens", vmin=threshold)
 plt.xlabel("interslavic", fontsize=9)
 plt.ylabel("english", fontsize=9)
 plt.show()
-
-
