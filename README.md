@@ -150,6 +150,11 @@
     git clone https://github.com/devguardium/ISV_data_gathering.git
   ```
 
+  - Checkout standalone_flask branch
+  ```sh
+    git checkout standalone_flask
+  ```
+
    - Install Python 3.9
   ```sh
     sudo add-apt-repository ppa:deadsnakes/ppa
@@ -180,5 +185,9 @@
   ```
 
 ### Run in production
+N.B. Flask development server is not recommended for production environment. Use e.g. gunicorn instead.
 
   - Run under gunicorn
+  ```
+    gunicorn --bind 0.0.0.0:2901 gunicorn_run:app
+  ```
