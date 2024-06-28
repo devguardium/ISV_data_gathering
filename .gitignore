@@ -7,3 +7,5 @@ __pycache__/
 
 get-pip.py
 venv/
+
+log.txt
