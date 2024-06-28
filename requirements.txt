@@ -17,6 +17,7 @@ Flask
 furl
 googleapis-common-protos
 grpcio
+gunicorn
 h11
 httpcore
 httpx
