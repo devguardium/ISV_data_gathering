@@ -152,6 +152,8 @@
 
   - Checkout standalone_flask branch
   ```sh
+    cd ISV_data_gathering/
+
     git checkout standalone_flask
   ```
 
@@ -175,6 +177,15 @@
   - Install project dependencies
   ```sh
     pip install -r requirements.txt
+  ```
+
+  - Configure firewall
+  ```sh
+    ufw status
+    ufw allow 22
+    ufw allow 2901
+    ufw show added
+    ufw enable
   ```
 
   - Copy Slovnik files
