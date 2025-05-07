@@ -13,7 +13,7 @@ from isv_translate import translate_sentence, translation_candidates_as_html, ge
 def create_app(etm_morph, slovnik):
     """Create and configure an instance of the Flask application."""
     # TODO: fix diacritics in slovnik
-    etm_morph.char_substitutes['e'.encode()] = ("ė".encode(), 'ė')
+    # etm_morph.char_substitutes['e'.encode()] = ("ė".encode(), 'ė')
     print(etm_morph.char_substitutes)
 
     app = Flask(__name__)
@@ -69,5 +69,5 @@ if __name__ == "__main__":
 
     app = create_app(etm_morph, slovnik)
 
-    app.run(host='localhost', port=args.port, debug=True)
+    app.run(host="0.0.0.0", port=args.port, debug=True)
 
