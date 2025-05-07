@@ -184,7 +184,7 @@ def translate_sentence(sent, src_lang, slovnik, etm_morph):
         for isv_lemma in translation_cands:
             if token_row_data.feats:
                 if token_row_data.pos not in {"ADV", "ADP", "PART"}:
-                    inflected = inflect_carefully(etm_morph, isv_lemma, inflect_data)
+                    inflected = inflect_carefully(etm_morph, isv_lemma, inflect_data, verbose=True)
                 else:
                     inflected = [isv_lemma]
 
